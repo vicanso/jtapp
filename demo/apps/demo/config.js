@@ -8,7 +8,7 @@
     redis: {
       name: 'vicanso',
       uri: 'redis://localhost:10010',
-      pwd: 'MY_REDIS_JENNY_TREE'
+      pwd: 'REDIS_PWD'
     }
   });
 
