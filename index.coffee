@@ -9,15 +9,20 @@ getConfigs = (apps, launchAppList = 'all', cbf) ->
     (cbf) ->
       if launchAppList == 'all'
         fs.readdir apps, cbf
+      else if launchAppList == 'one'
+        cbf null, apps
       else
         cbf null, launchAppList
     (files, cbf) ->
       configs = []
-      _.each files, (file) ->
-        if file.charAt(0) != '.'
-          file = "#{apps}/#{file}/config"
-          configs.push require file
-      cbf null, configs
+      if _.isString files
+        configs.push require files
+      else
+        _.each files, (file) ->
+          if file.charAt(0) != '.'
+            file = "#{apps}/#{file}/config"
+            configs.push require file
+        cbf null, configs
   ], (err, configs) ->
     cbf err, configs
 

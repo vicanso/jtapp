@@ -19,19 +19,25 @@
       function(cbf) {
         if (launchAppList === 'all') {
           return fs.readdir(apps, cbf);
+        } else if (launchAppList === 'one') {
+          return cbf(null, apps);
         } else {
           return cbf(null, launchAppList);
         }
       }, function(files, cbf) {
         var configs;
         configs = [];
-        _.each(files, function(file) {
-          if (file.charAt(0) !== '.') {
-            file = "" + apps + "/" + file + "/config";
-            return configs.push(require(file));
-          }
-        });
-        return cbf(null, configs);
+        if (_.isString(files)) {
+          return configs.push(require(files));
+        } else {
+          _.each(files, function(file) {
+            if (file.charAt(0) !== '.') {
+              file = "" + apps + "/" + file + "/config";
+              return configs.push(require(file));
+            }
+          });
+          return cbf(null, configs);
+        }
       }
     ], function(err, configs) {
       return cbf(err, configs);
