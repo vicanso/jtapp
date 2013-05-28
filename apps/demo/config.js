@@ -3,7 +3,7 @@
 
   routeInfos = [
     {
-      route: ['/'],
+      route: ['/', '/demo'],
       jadeView: 'demo/index',
       handler: function(req, res, cbf, next) {
         return cbf(null, {
@@ -13,9 +13,10 @@
     }, {
       route: '/error',
       handler: function(req, res, cbf, next) {
-        return cbf(null, {
-          name: 'nick'
-        });
+        var err;
+        err = new Error('请求数据失败');
+        err.status = 500;
+        return cbf(err);
       }
     }
   ];
@@ -26,6 +27,17 @@
       handler: function() {
         return function(req, res, next) {
           console.dir('demo firstMiddleware');
+          return next();
+        };
+      }
+    },
+    middleware: {
+      mount: 'demo',
+      handler: function() {
+        return function(req, res, next) {
+          req._info = {
+            app: 'demo'
+          };
           return next();
         };
       }

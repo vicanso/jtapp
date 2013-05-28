@@ -1,13 +1,11 @@
 (function() {
-  var async, cluster, config, getConfigs, initApp, setting, _;
+  var async, cluster, config, getConfigs, init, initApp, _;
 
   async = require('async');
 
   _ = require('underscore');
 
   cluster = require('cluster');
-
-  setting = require('./setting');
 
   config = require('./config');
 
@@ -40,11 +38,11 @@
     });
   };
 
-  initApp = function(configs) {
+  initApp = function(configs, setting, cbf) {
     var app, express, expressSetting, jtLogger, jtStatic, routeHandler;
-    express = require('express');
     jtLogger = require('jtlogger');
     jtStatic = require('jtstatic');
+    express = require('express');
     app = express();
     expressSetting = setting.express || {};
     if (expressSetting.enable) {
@@ -73,18 +71,24 @@
     });
     jtStatic.configure(setting["static"]);
     jtStatic.emptyMergePath();
-    app.use("/" + setting["static"].urlPrefix, jtStatic["static"]());
+    app.use(setting["static"].urlPrefix, jtStatic["static"]());
     if (setting.favicon) {
       app.use(express.favicon(setting.favicon));
     }
     _.each(configs, function(cfg) {
-      var middleware;
-      middleware = cfg.middleware;
-      if (_.isFunction(middleware)) {
-        return app.use(middleware());
-      } else if (_.isObject(middleware)) {
-        return app.use(middleware.mount, middleware.handler());
-      }
+      var middlewareHandler;
+      middlewareHandler = function(middleware) {
+        if (_.isFunction(middleware)) {
+          return app.use(middleware());
+        } else if (_.isArray(middleware)) {
+          return _.each(middleware, function(mw) {
+            return middlewareHandler(mw);
+          });
+        } else if (_.isObject(middleware)) {
+          return app.use(middleware.mount, middleware.handler());
+        }
+      };
+      return middlewareHandler(cfg.middleware);
     });
     if (config.isProductionMode) {
       app.use(express.limit('1mb'));
@@ -98,26 +102,40 @@
     app.use(express.methodOverride());
     app.use(app.router);
     app.use(require('./lib/errorhandler').handler());
-    app.listen(config.getListenPort());
-    routeHandler = require('./lib/routehandler');
+    app.listen(setting.port);
     _.each(configs, function(cfg) {
-      if (cfg.route) {
-        return routeHandler.initRoutes(app, cfg.route);
+      var sessionHandler;
+      sessionHandler = require('./lib/sessionhandler');
+      if (_.isFunction(cfg.session)) {
+        return sessionHandler.handler(cfg.session());
       }
     });
-    return _.each(configs, function(cfg) {
+    routeHandler = require('./lib/routehandler');
+    _.each(configs, function(cfg) {
+      if (_.isFunction(cfg.route)) {
+        return routeHandler.initRoutes(app, cfg.route());
+      }
+    });
+    _.each(configs, function(cfg) {
       if (_.isFunction(cfg.init)) {
         return cfg.init(app);
       }
     });
+    return cbf(null, app);
   };
 
-  async.waterfall([
-    function(cbf) {
-      return getConfigs(setting.apps, config.getLaunchAppList(), cbf);
-    }, function(configs, cbf) {
-      return initApp(configs);
-    }
-  ]);
+  init = function(setting, cbf) {
+    return async.waterfall([
+      function(cbf) {
+        return getConfigs(setting.apps, setting.launch, cbf);
+      }, function(configs, cbf) {
+        return initApp(configs, setting, cbf);
+      }
+    ], cbf);
+  };
+
+  module.exports = {
+    init: init
+  };
 
 }).call(this);

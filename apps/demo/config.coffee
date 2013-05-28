@@ -1,6 +1,6 @@
 routeInfos = [
   {
-    route : ['/']
+    route : ['/', '/demo']
     jadeView : 'demo/index'
     handler : (req, res, cbf, next) ->
       cbf null, {
@@ -10,16 +10,11 @@ routeInfos = [
   {
     route : '/error'
     handler : (req, res, cbf, next) ->
-    	cbf null, {
-    		name : 'nick'
-    	}
-    	# err = new Error '请求数据失败'
-    	# err.status = 500
-    	# cbf err
+      err = new Error '请求数据失败'
+      err.status = 500
+      cbf err
   }
 ]
-
-
 
 config = 
   firstMiddleware : 
@@ -28,5 +23,13 @@ config =
       (req, res, next) ->
         console.dir 'demo firstMiddleware'
         next()
+  middleware : 
+    mount : 'demo'
+    handler : ->
+      (req, res, next) ->
+        req._info =
+          app : 'demo'
+        next()
+    
   route : routeInfos
 module.exports = config

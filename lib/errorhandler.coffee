@@ -12,14 +12,20 @@ errorHandler =
   ###
   handler : () ->
     if config.isProductionMode
-      express.errorHandler {
-        dumpExceptions : false
-        showStack : false
-      }
+      (err, req, res, next) ->
+        accept = req.headers.accept || ''
+        if ~accept.indexOf 'html'
+          errorPage err, res
+        else if ~accept.indexOf 'json'
+          errorJson err, res
     else
-      express.errorHandler {
-        dumpExceptions : false
-        showStack : false
-      }
+      express.errorHandler()
+
+errorPage = (err, res) ->
+  res.setHeader 'Content-Type', 'text/html; charset=utf-8'
+errorJson = (err, res) ->
+  res.setHeader 'Content-Type', 'text/plain'
+  res.status err.status
+  res.end err.message
 
 module.exports = errorHandler

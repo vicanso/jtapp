@@ -4,10 +4,8 @@
     return $.ajax({
       url: '/error',
       dataType: 'json'
-    }).success(function(data) {
-      return console.dir(data);
-    }).error(function(data) {
-      return console.dir(data);
+    }).success(function(data) {}).fail(function() {
+      return console.dir(arguments);
     });
   });
 

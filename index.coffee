@@ -1,7 +1,6 @@
 async = require 'async'
 _ = require 'underscore'
 cluster = require 'cluster'
-setting = require './setting'
 config = require './config'
 
 getConfigs = (apps, launchAppList = 'all', cbf) ->
@@ -23,12 +22,12 @@ getConfigs = (apps, launchAppList = 'all', cbf) ->
     cbf err, configs
 
 
-initApp = (configs) ->
-  express = require 'express'
+initApp = (configs, setting, cbf) ->
   jtLogger = require 'jtlogger'
   jtStatic = require 'jtstatic'
-
+  express = require 'express'
   app = express()
+  
 
 
   # express的配置
@@ -55,7 +54,7 @@ initApp = (configs) ->
   # 静态文件处理
   jtStatic.configure setting.static
   jtStatic.emptyMergePath()
-  app.use "/#{setting.static.urlPrefix}", jtStatic.static()
+  app.use setting.static.urlPrefix, jtStatic.static()
 
   # favicon处理
   if setting.favicon
@@ -63,11 +62,15 @@ initApp = (configs) ->
 
   # express的middleware处理，在静态文件和favicon之后
   _.each configs, (cfg) ->
-    middleware = cfg.middleware
-    if _.isFunction middleware
-      app.use middleware()
-    else if _.isObject middleware
-      app.use middleware.mount, middleware.handler()
+    middlewareHandler = (middleware) ->
+      if _.isFunction middleware
+        app.use middleware()
+      else if _.isArray middleware
+        _.each middleware, (mw) ->
+          middlewareHandler mw
+      else if _.isObject middleware
+        app.use middleware.mount, middleware.handler()
+    middlewareHandler cfg.middleware
 
   # HTTP LOG and limit
   if config.isProductionMode
@@ -85,23 +88,34 @@ initApp = (configs) ->
 
   app.use require('./lib/errorhandler').handler()
 
-  app.listen config.getListenPort()
+  app.listen setting.port
+
+  # 获取session设置
+  _.each configs, (cfg) ->
+    sessionHandler = require './lib/sessionhandler'
+    if _.isFunction cfg.session
+      sessionHandler.handler cfg.session()
 
   # route handle
   routeHandler = require './lib/routehandler'
   _.each configs, (cfg) ->
-    if cfg.route
-      routeHandler.initRoutes app, cfg.route
+    if _.isFunction cfg.route
+      routeHandler.initRoutes app, cfg.route()
 
 
+  # 调用初始化
   _.each configs, (cfg) ->
     if _.isFunction cfg.init
       cfg.init app
+  cbf null, app
 
-async.waterfall [
-  (cbf) ->
-    getConfigs setting.apps, config.getLaunchAppList(), cbf
-  (configs, cbf) ->
-    initApp configs
-]
+init = (setting, cbf) ->
+  async.waterfall [
+    (cbf) ->
+      getConfigs setting.apps, setting.launch, cbf
+    (configs, cbf) ->
+      initApp configs, setting, cbf
+  ], cbf
 
+module.exports = 
+  init : init
