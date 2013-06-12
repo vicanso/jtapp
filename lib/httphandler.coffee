@@ -1,5 +1,5 @@
 ###*!
-* Copyright(c) 2012 vicanso 腻味
+* Copyright(c) 2012 vicanso 墨鱼仔
 * MIT Licensed
 ###
 mime = require('express').mime
@@ -17,10 +17,9 @@ httpHandler =
    * @return {[type]}      [description]
   ###
   render : (req, res, view, data, headerOptions = {}, next) ->
-    self = @
     if data
       fileImporter = data.fileImporter
-      res.render view, data, (err, html) ->
+      res.render view, data, (err, html) =>
         if err
           next err
           return 
@@ -31,7 +30,7 @@ httpHandler =
           'Cache-Control' : 'public, max-age=300'
           'Last-Modified' : new Date()
         }
-        self.response req, res, html, headerOptions
+        @response req, res, html, headerOptions
     @
   ###*
    * response 响应请求
@@ -46,12 +45,12 @@ httpHandler =
       if headerOptions
         _.each headerOptions, (value, key) ->
           res.header key ,value
-      res.end data
+      res.send data
     @
   json : (req, res, data) ->
     if resIsAvailable res
       res.json data
-    return @
+    @
 
 ###*
  * appendJsAndCss 往HTML中插入js,css引入列表
@@ -62,17 +61,13 @@ httpHandler =
 appendJsAndCss = (html, fileImporter) ->
   html = html.replace '<!--CSS_FILES_CONTAINER-->', fileImporter.exportCss config.isProductionMode
   html = html.replace '<!--JS_FILES_CONTAINER-->', fileImporter.exportJs config.isProductionMode
-  return html
 ###*
    * resIsAvailable 判断response是否可用
    * @param  {response} res response对象
    * @return {Boolean}
   ###
 resIsAvailable = (res) ->
-  if res.headerSent
-    return false
-  else
-    return true
+  !res.headerSent
 
 
 module.exports = httpHandler

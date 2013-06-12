@@ -1,5 +1,5 @@
 ###*!
-* Copyright(c) 2012 vicanso 腻味
+* Copyright(c) 2012 vicanso 墨鱼仔
 * MIT Licensed
 ###
 
@@ -21,5 +21,6 @@ sessionHandler =
     complete (req, res, next) ->
       cookieParser req, res, ->
         sessionParser req, res, next
+    @
 
 module.exports = sessionHandler

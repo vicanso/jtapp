@@ -1,3 +1,10 @@
+
+/**!
+* Copyright(c) 2012 vicanso 墨鱼仔
+* MIT Licensed
+*/
+
+
 (function() {
   var async, cluster, config, getConfigs, init, initApp, _;
 
@@ -28,7 +35,7 @@
         var configs;
         configs = [];
         if (_.isString(files)) {
-          return configs.push(require(files));
+          configs.push(require(files));
         } else {
           _.each(files, function(file) {
             if (file.charAt(0) !== '.') {
@@ -36,8 +43,8 @@
               return configs.push(require(file));
             }
           });
-          return cbf(null, configs);
         }
+        return cbf(null, configs);
       }
     ], function(err, configs) {
       return cbf(err, configs);

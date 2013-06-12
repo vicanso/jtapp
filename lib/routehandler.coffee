@@ -1,3 +1,7 @@
+###*!
+* Copyright(c) 2012 vicanso 墨鱼仔
+* MIT Licensed
+###
 _ = require 'underscore'
 config = require '../config'
 FileImporter = require('jtstatic').FileImporter
@@ -22,26 +26,29 @@ routeHandler =
             res.status statusCode
             if statusCode > 299 && statusCode < 400
               res.redirect statusCode, viewData
-            else if routeInfo.jadeView
+            else if routeInfo.template
               viewData.fileImporter = new FileImporter debug, routeInfo.staticsHost
               viewData.title ?= '未定义标题'
-              httpHandler.render req, res, routeInfo.jadeView, viewData, headerOptions, next
+              httpHandler.render req, res, routeInfo.template, viewData, headerOptions, next
             else
               if _.isObject viewData
                 httpHandler.json req, res, viewData
               else
                 httpHandler.response req, res, viewData
           else
-            err = new Error "#{__filename}: the viewData is null"
-            err.code = 500
-            next err
+            res.status(200).json {code : 0}
+
         , next
       middleware = routeInfo.middleware || []
       routes = routeInfo.route
       if !_.isArray routes
         routes = [routes]
       _.each routes, (route) ->
-        method = (routeInfo.type || 'get').toLowerCase()
-        app[method] route, middleware, handle
-
+        types = routeInfo.type || 'get'
+        if !_.isArray types
+          types = [types]
+        _.each types, (type) ->
+          method = type.toLowerCase()
+          app[method] route, middleware, handle
+    @
 module.exports = routeHandler

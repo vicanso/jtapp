@@ -1,5 +1,5 @@
 ###*!
-* Copyright(c) 2012 vicanso 腻味
+* Copyright(c) 2012 vicanso 墨鱼仔
 * MIT Licensed
 ###
 
@@ -25,7 +25,7 @@ errorPage = (err, res) ->
   res.setHeader 'Content-Type', 'text/html; charset=utf-8'
 errorJson = (err, res) ->
   res.setHeader 'Content-Type', 'text/plain'
-  res.status err.status
+  res.status err.status || 500
   res.end err.message
 
 module.exports = errorHandler

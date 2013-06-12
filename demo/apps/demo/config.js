@@ -30,21 +30,29 @@
       var routeInfos;
       return routeInfos = [
         {
+          type: ['get', 'post'],
           route: ['/'],
-          jadeView: 'demo/index',
+          template: 'demo/index',
           middleware: [sessionParser],
           handler: function(req, res, cbf, next) {
-            console.dir(req.session);
             return cbf(null, {
               title: '销售单'
             });
           }
         }, {
-          route: '/error',
-          handler: function(req, res, cbf, next) {
+          route: '/data',
+          handler: function(req, res, cbf) {
             return cbf(null, {
               name: 'nick'
             });
+          }
+        }, {
+          route: '/error',
+          handler: function(req, res, cbf, next) {
+            var err;
+            err = new Error('请求数据失败');
+            err.status = 500;
+            return cbf(err);
           }
         }
       ];

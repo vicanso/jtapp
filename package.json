@@ -1,0 +1,20 @@
+{
+  "name" : "jtapp",
+  "description" : "node app ",
+  "version" : "0.0.1",
+  "author" : {
+    "name" : "vicanso 墨鱼仔",
+    "email" : "vicansocanbico@gmail.com"
+  },
+  "keywords" : [
+    "node",
+    "web"
+  ],
+  "dependencies" : {
+    "jtstatic" : "latest",
+    "async" : "latest",
+    "underscore" : "latest",
+    "express" : "latest",
+    "connect-redis" : "latest"
+  }
+}

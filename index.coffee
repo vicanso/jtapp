@@ -1,3 +1,7 @@
+###*!
+* Copyright(c) 2012 vicanso 墨鱼仔
+* MIT Licensed
+###
 async = require 'async'
 _ = require 'underscore'
 cluster = require 'cluster'
@@ -22,7 +26,7 @@ getConfigs = (apps, launchAppList = 'all', cbf) ->
           if file.charAt(0) != '.'
             file = "#{apps}/#{file}/config"
             configs.push require file
-        cbf null, configs
+      cbf null, configs
   ], (err, configs) ->
     cbf err, configs
 

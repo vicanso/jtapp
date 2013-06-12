@@ -1,3 +1,10 @@
+
+/**!
+* Copyright(c) 2012 vicanso 墨鱼仔
+* MIT Licensed
+*/
+
+
 (function() {
   var config, path, _;
 

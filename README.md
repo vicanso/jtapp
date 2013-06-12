@@ -1,3 +1,41 @@
+# jtstatic - node.js的HTTP SERVER封装，只需要通过配置文件就可以实现静态文件、session、router的处理
+
+## 特性：
+
+- 配置简单，只需要定义静态文件的目录、启动app的路径、端口等就可以创建一个node.js的server
+- 封装router的处理，只需要定义router的访问路径，处理函数，模板路径等，而无需其它的繁琐编码
+- 不同的APP允许使用不同的session配置
+- 允许在最开始、静态文件处理之后添加middleware，实现不同的控制方式
+- 每个APP目录下必须配置config.js，该文件可提供以下方法：firstMiddleware、route、session
+
+###Demo APP Start
+```js
+jtApp = require 'jtapp'
+setting = 
+  express : 
+    enable : ["trust proxy"]
+    disabled : ["trust proxy"]
+    set : 
+      'view engine' : 'jade'
+      views : "#{__dirname}/views"
+  static : 
+    path : "#{__dirname}/statics"
+    urlPrefix : '/static'
+    mergePath : "#{__dirname}/statics/temp"
+    mergeUrlPrefix : 'temp'
+    maxAge : 3000
+    mergeList : []
+    mount : '/static'
+  launch : 'all'
+  favicon : ''
+  apps : "#{__dirname}/apps"
+  port : 10000
+jtApp.init setting, (err, app) ->
+  console.dir err
+```
+
+### Demo APP Config
+```js
 jtRedis = require 'jtredis'
 jtRedis.configure
   query : true
@@ -60,3 +98,4 @@ config =
       sessionParser = parser
 
 module.exports = config
+```
