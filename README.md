@@ -1,4 +1,4 @@
-# jtstatic - node.js的HTTP SERVER封装，只需要通过配置文件就可以实现静态文件、session、router的处理
+# jtapp - node.js的HTTP SERVER封装，只需要通过配置文件就可以实现静态文件、session、router的处理
 
 ## 特性：
 
