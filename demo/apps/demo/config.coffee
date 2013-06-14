@@ -5,9 +5,12 @@ jtRedis.configure
     name : 'vicanso'
     uri : 'redis://localhost:10010'
     pwd : 'REDIS_PWD'
-
+_sessionParser = null
 sessionParser = (req, res, next) ->
-  next()
+  if !_sessionParser
+    next()
+  else
+    _sessionParser req, res, next
 
 config = 
   firstMiddleware : 
@@ -57,6 +60,6 @@ config =
     ttl : 30 * 60
     client : jtRedis.getClient 'vicanso'
     complete : (parser) ->
-      sessionParser = parser
+      _sessionParser = parser
 
 module.exports = config

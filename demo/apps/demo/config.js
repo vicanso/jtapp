@@ -1,5 +1,5 @@
 (function() {
-  var config, jtRedis, sessionParser;
+  var config, jtRedis, sessionParser, _sessionParser;
 
   jtRedis = require('jtredis');
 
@@ -12,8 +12,14 @@
     }
   });
 
+  _sessionParser = null;
+
   sessionParser = function(req, res, next) {
-    return next();
+    if (!_sessionParser) {
+      return next();
+    } else {
+      return _sessionParser(req, res, next);
+    }
   };
 
   config = {
@@ -64,7 +70,7 @@
         ttl: 30 * 60,
         client: jtRedis.getClient('vicanso'),
         complete: function(parser) {
-          return sessionParser = parser;
+          return _sessionParser = parser;
         }
       };
     }
