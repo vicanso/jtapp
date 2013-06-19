@@ -14,6 +14,7 @@ setting =
     maxAge : 3000
     mergeList : []
     mount : '/static'
+  maxAge : 3000 * 1000
   launch : 'all'
   favicon : ''
   apps : "#{__dirname}/apps"

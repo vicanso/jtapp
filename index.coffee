@@ -119,6 +119,7 @@ initApp = (configs, setting, cbf) ->
   cbf null, app
 
 init = (setting, cbf) ->
+  config.maxAge = setting.maxAge
   async.waterfall [
     (cbf) ->
       getConfigs setting.apps, setting.launch, cbf

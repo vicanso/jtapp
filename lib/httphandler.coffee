@@ -25,9 +25,11 @@ httpHandler =
           return 
         if fileImporter
           html = appendJsAndCss html, fileImporter
+        maxAge = config.maxAge || 300 * 1000
+
         _.defaults headerOptions, {
           'Content-Type' :'text/html'
-          'Cache-Control' : 'public, max-age=300'
+          'Cache-Control' : "public, max-age=#{maxAge / 1000}"
           'Last-Modified' : new Date()
         }
         @response req, res, html, headerOptions

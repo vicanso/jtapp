@@ -5,27 +5,31 @@
 
 express = require 'express'
 config = require '../config'
+expressErrorHandler = express.errorHandler()
 errorHandler = 
   ###*
    * handler 返回错误信息处理函数
    * @return {Function} express middleware
   ###
   handler : () ->
-    if config.isProductionMode
-      (err, req, res, next) ->
-        accept = req.headers.accept || ''
-        if ~accept.indexOf 'html'
+    (err, req, res, next) ->
+      accept = req.headers.accept || ''
+      if ~accept.indexOf 'json'
+        errorJson err, res
+      else
+        if config.isProductionMode
           errorPage err, res
-        else if ~accept.indexOf 'json'
-          errorJson err, res
-    else
-      express.errorHandler()
+        else
+          expressErrorHandler err, req, res, next
 
 errorPage = (err, res) ->
-  res.setHeader 'Content-Type', 'text/html; charset=utf-8'
+  res.send err.status || 500, err.message
 errorJson = (err, res) ->
-  res.setHeader 'Content-Type', 'text/plain'
-  res.status err.status || 500
-  res.end err.message
+  data = 
+    code : err.code
+    msg : err.msg || err.message
+  if !config.isProductionMode
+    data.stack = err.stack
+  res.json err.status || 500, data
 
 module.exports = errorHandler

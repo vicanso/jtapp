@@ -138,6 +138,7 @@
   };
 
   init = function(setting, cbf) {
+    config.maxAge = setting.maxAge;
     return async.waterfall([
       function(cbf) {
         return getConfigs(setting.apps, setting.launch, cbf);

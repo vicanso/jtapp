@@ -56,7 +56,9 @@
           route: '/error',
           handler: function(req, res, cbf, next) {
             var err;
-            err = new Error('请求数据失败');
+            err = new Error;
+            err.message = '请求数据失败';
+            err.code = -1;
             err.status = 500;
             return cbf(err);
           }
