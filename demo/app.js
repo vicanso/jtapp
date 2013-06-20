@@ -25,7 +25,7 @@
     launch: 'all',
     favicon: '',
     apps: "" + __dirname + "/apps",
-    port: 10000
+    port: 8080
   };
 
   jtApp.init(setting, function(err, app) {

@@ -31,7 +31,7 @@ routeHandler =
             if statusCode > 299 && statusCode < 400
               res.redirect statusCode, viewData
             else if routeInfo.template
-              viewData.fileImporter = new FileImporter debug, routeInfo.staticsHost
+              viewData.fileImporter = new FileImporter routeInfo.staticsHost
               viewData.title ?= '未定义标题'
               httpHandler.render req, res, routeInfo.template, viewData, headerOptions, next
             else
