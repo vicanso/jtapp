@@ -16,5 +16,11 @@
     "underscore" : "latest",
     "express" : "latest",
     "connect-redis" : "latest"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vicanso/jtapp.git"
+  },
+  "main": "index",
+  "readmeFilename": "README.md"
 }

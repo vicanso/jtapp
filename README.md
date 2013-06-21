@@ -43,9 +43,7 @@ jtRedis.configure
     name : 'vicanso'
     uri : 'redis://localhost:10010'
     pwd : 'REDIS_PWD'
-
-sessionParser = (req, res, next) ->
-  next()
+sessionParser = null
 
 config = 
   firstMiddleware : 

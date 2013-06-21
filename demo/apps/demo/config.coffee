@@ -1,16 +1,12 @@
 jtRedis = require 'jtredis'
+_ = require 'underscore'
 jtRedis.configure
   query : true
   redis : 
     name : 'vicanso'
     uri : 'redis://localhost:10010'
     pwd : 'REDIS_PWD'
-_sessionParser = null
-sessionParser = (req, res, next) ->
-  if !_sessionParser
-    next()
-  else
-    _sessionParser req, res, next
+sessionParser = null
 
 config = 
   firstMiddleware : 
@@ -62,6 +58,6 @@ config =
     ttl : 30 * 60
     client : jtRedis.getClient 'vicanso'
     complete : (parser) ->
-      _sessionParser = parser
+      sessionParser = parser
 
 module.exports = config

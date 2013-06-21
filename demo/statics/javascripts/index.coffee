@@ -1,4 +1,4 @@
 jQuery ($) ->
 	$.ajax({url :'/error', dataType : 'json'}).success((data) ->
-	).fail () ->
+	).fail (xhr, res) ->
 		console.dir arguments

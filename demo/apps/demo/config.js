@@ -1,7 +1,9 @@
 (function() {
-  var config, jtRedis, sessionParser, _sessionParser;
+  var config, jtRedis, sessionParser, _;
 
   jtRedis = require('jtredis');
+
+  _ = require('underscore');
 
   jtRedis.configure({
     query: true,
@@ -12,15 +14,7 @@
     }
   });
 
-  _sessionParser = null;
-
-  sessionParser = function(req, res, next) {
-    if (!_sessionParser) {
-      return next();
-    } else {
-      return _sessionParser(req, res, next);
-    }
-  };
+  sessionParser = null;
 
   config = {
     firstMiddleware: {
@@ -72,7 +66,7 @@
         ttl: 30 * 60,
         client: jtRedis.getClient('vicanso'),
         complete: function(parser) {
-          return _sessionParser = parser;
+          return sessionParser = parser;
         }
       };
     }
