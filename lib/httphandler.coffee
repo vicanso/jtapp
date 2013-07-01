@@ -49,9 +49,12 @@ httpHandler =
           res.header key ,value
       res.send data
     @
-  json : (req, res, data) ->
+  json : (req, res, data, headerOptions) ->
     if resIsAvailable res
-      res.json data
+      if headerOptions
+        _.each headerOptions, (value, key) ->
+          res.header key ,value
+      res.json 200, data
     @
 
 ###*

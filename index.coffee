@@ -90,7 +90,9 @@ initApp = (configs, setting, cbf) ->
   else
     app.use express.logger 'dev'
 
-  app.use express.bodyParser()
+  app.use express.bodyParser {
+    keepExtensions : true
+  }
   app.use express.methodOverride()
 
   app.use app.router

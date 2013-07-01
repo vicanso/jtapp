@@ -20,10 +20,15 @@ routeHandler =
         next = _.once next
         debug = !config.isProductionMode
         routeInfo.handler req, res, (err, viewData, statusCode = 200, headerOptions = {}) ->
+          if _.isNumber viewData
+            statusCode = viewData
+            viewData = null
           if _.isObject statusCode
             tmp = statusCode
             headerOptions = statusCode
             statusCode = tmp
+          if !_.isNumber statusCode
+            statusCode = 200
           if err
             next err
           else if viewData
@@ -36,12 +41,11 @@ routeHandler =
               httpHandler.render req, res, routeInfo.template, viewData, headerOptions, next
             else
               if _.isObject viewData
-                httpHandler.json req, res, viewData
+                httpHandler.json req, res, viewData, headerOptions, statusCode
               else
-                httpHandler.response req, res, viewData
+                httpHandler.response req, res, viewData, headerOptions, statusCode
           else
             res.status(statusCode).json {code : 0}
-
         , next
       middleware = routeInfo.middleware || []
       routes = routeInfo.route
