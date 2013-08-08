@@ -1,30 +1,21 @@
 (function() {
   var jtApp, setting;
 
+  process.env.NODE_ENV = 'production';
+
   jtApp = require('../index');
 
   setting = {
-    express: {
-      enable: ["trust proxy"],
-      disabled: ["trust proxy"],
-      set: {
-        'view engine': 'jade',
-        views: "" + __dirname + "/views"
+    launch: 'all',
+    apps: "" + __dirname + "/apps",
+    middleware: {
+      mount: '/healthchecks',
+      handler: function() {
+        return function(req, res) {
+          return res.send('OK');
+        };
       }
     },
-    "static": {
-      path: "" + __dirname + "/statics",
-      urlPrefix: '/static',
-      mergePath: "" + __dirname + "/statics/temp",
-      mergeUrlPrefix: 'temp',
-      maxAge: 3000,
-      mergeList: [],
-      mount: '/static'
-    },
-    maxAge: 3000 * 1000,
-    launch: 'all',
-    favicon: '',
-    apps: "" + __dirname + "/apps",
     port: 8080
   };
 

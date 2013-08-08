@@ -6,13 +6,15 @@
 
 
 (function() {
-  var async, cluster, config, getConfigs, init, initApp, _;
+  var JTStatic, async, config, express, getConfigs, init, initApp, initApps, middlewareHandler, _;
 
   async = require('async');
 
   _ = require('underscore');
 
-  cluster = require('cluster');
+  express = require('express');
+
+  JTStatic = require('jtstatic');
 
   config = require('./config');
 
@@ -39,7 +41,11 @@
         } else {
           _.each(files, function(file) {
             if (file.charAt(0) !== '.') {
-              file = "" + apps + "/" + file + "/config";
+              if (apps) {
+                file = "" + apps + "/" + file + "/config";
+              } else {
+                file = "" + file + "/config";
+              }
               return configs.push(require(file));
             }
           });
@@ -51,13 +57,24 @@
     });
   };
 
-  initApp = function(configs, setting, cbf) {
-    var app, express, expressSetting, jtLogger, jtStatic, routeHandler;
-    jtLogger = require('jtlogger');
-    jtStatic = require('jtstatic');
-    express = require('express');
-    app = express();
-    expressSetting = setting.express || {};
+  middlewareHandler = function(app, middleware) {
+    if (_.isFunction(middleware)) {
+      return app.use(middleware());
+    } else if (_.isArray(middleware)) {
+      return _.each(middleware, function(mw) {
+        return middlewareHandler(app, mw);
+      });
+    } else if (_.isObject(middleware)) {
+      return app.use(middleware.mount, middleware.handler());
+    }
+  };
+
+  initApp = function(config, app) {
+    var expressSetting, firstMiddleware, jtStatic, routeHandler, sessionHandler, _ref;
+    if (app == null) {
+      app = express();
+    }
+    expressSetting = config.express || {};
     if (expressSetting.enable) {
       _.each(expressSetting.enable, function(key) {
         return app.enable(key);
@@ -73,41 +90,29 @@
         return app.set(key, value);
       });
     }
-    _.each(configs, function(cfg) {
-      var firstMiddleware;
-      firstMiddleware = cfg.firstMiddleware;
-      if (_.isFunction(firstMiddleware)) {
-        return app.use(firstMiddleware());
-      } else if (_.isObject(firstMiddleware)) {
-        return app.use(firstMiddleware.mount, firstMiddleware.handler());
-      }
-    });
-    jtStatic.configure(setting["static"]);
-    jtStatic.emptyMergePath();
-    app.use(setting["static"].urlPrefix, jtStatic["static"]());
-    if (setting.favicon) {
-      app.use(express.favicon(setting.favicon));
+    firstMiddleware = config.firstMiddleware;
+    if (_.isFunction(firstMiddleware)) {
+      app.use(firstMiddleware());
+    } else if (_.isObject(firstMiddleware)) {
+      app.use(firstMiddleware.mount, firstMiddleware.handler());
     }
-    _.each(configs, function(cfg) {
-      var middlewareHandler;
-      middlewareHandler = function(middleware) {
-        if (_.isFunction(middleware)) {
-          return app.use(middleware());
-        } else if (_.isArray(middleware)) {
-          return _.each(middleware, function(mw) {
-            return middlewareHandler(mw);
-          });
-        } else if (_.isObject(middleware)) {
-          return app.use(middleware.mount, middleware.handler());
-        }
-      };
-      return middlewareHandler(cfg.middleware);
-    });
+    jtStatic = new JTStatic;
+    if ((_ref = config["static"]) != null ? _ref.convertExts : void 0) {
+      jtStatic.convertExts(config["static"].convertExts);
+      delete config["static"].convertExts;
+    }
+    jtStatic.configure(config["static"]);
+    jtStatic.emptyMergePath();
+    app.use(config["static"].urlPrefix, jtStatic["static"]());
+    if (config.favicon) {
+      app.use(express.favicon(config.favicon));
+    }
+    if (config.middleware) {
+      middlewareHandler(app, config.middleware);
+    }
     if (config.isProductionMode) {
       app.use(express.limit('1mb'));
-      app.use(jtLogger.getConnectLogger('HTTP-INFO-LOGGER', {
-        format: express.logger.tiny
-      }));
+      app.use(express.logger('tiny'));
     } else {
       app.use(express.logger('dev'));
     }
@@ -117,26 +122,47 @@
     app.use(express.methodOverride());
     app.use(app.router);
     app.use(require('./lib/errorhandler').handler());
-    app.listen(setting.port);
-    _.each(configs, function(cfg) {
-      var sessionHandler;
-      sessionHandler = require('./lib/sessionhandler');
-      if (_.isFunction(cfg.session)) {
-        return sessionHandler.handler(cfg.session());
-      }
-    });
+    sessionHandler = require('./lib/sessionhandler');
+    if (_.isFunction(config.session)) {
+      sessionHandler.handler(config.session());
+    }
     routeHandler = require('./lib/routehandler');
+    if (_.isFunction(config.route)) {
+      routeHandler.initRoutes(app, config.route(), jtStatic);
+    }
+    if (_.isFunction(config.init)) {
+      config.init(app);
+    }
+    return app;
+  };
+
+  initApps = function(configs, port, middleware, cbf) {
+    var app;
+    app = express();
+    if (_.isFunction(middleware)) {
+      cbf = middleware;
+      middleware = null;
+    }
+    if (middleware) {
+      middlewareHandler(app, middleware);
+    }
     _.each(configs, function(cfg) {
-      if (_.isFunction(cfg.route)) {
-        return routeHandler.initRoutes(app, cfg.route());
+      var subApp;
+      if (cfg.host) {
+        subApp = initApp(cfg);
+        if (_.isArray(cfg.host)) {
+          return _.each(cfg.host, function(host) {
+            return app.use(express.vhost(host, subApp));
+          });
+        } else {
+          return app.use(express.vhost(cfg.host, subApp));
+        }
+      } else {
+        return initApp(cbf, app);
       }
     });
-    _.each(configs, function(cfg) {
-      if (_.isFunction(cfg.init)) {
-        return cfg.init(app);
-      }
-    });
-    return cbf(null, app);
+    app.listen(port);
+    return console.info("server listen on port:" + port);
   };
 
   init = function(setting, cbf) {
@@ -145,7 +171,7 @@
       function(cbf) {
         return getConfigs(setting.apps, setting.launch, cbf);
       }, function(configs, cbf) {
-        return initApp(configs, setting, cbf);
+        return initApps(configs, setting.port, setting.middleware, cbf);
       }
     ], cbf);
   };

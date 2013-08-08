@@ -20,6 +20,6 @@ config =
     if @isMaster()
       0
     else
-      cluster.worker.uniqueID || -1
+      cluster.worker.id || -1
       
 module.exports = config

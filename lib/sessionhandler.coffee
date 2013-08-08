@@ -18,9 +18,9 @@ sessionHandler =
       RedisStore = require('connect-redis') express
       options.store = new RedisStore redisOptions
     sessionParser = express.session options
-    complete (req, res, next) ->
+    complete (req, res, cbf) ->
       cookieParser req, res, ->
-        sessionParser req, res, next
+        sessionParser req, res, cbf
     @
 
 module.exports = sessionHandler

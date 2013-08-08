@@ -29,7 +29,7 @@
       if (this.isMaster()) {
         return 0;
       } else {
-        return cluster.worker.uniqueID || -1;
+        return cluster.worker.id || -1;
       }
     }
   };

@@ -4,9 +4,18 @@
 ###
 async = require 'async'
 _ = require 'underscore'
-cluster = require 'cluster'
+express = require 'express'
+JTStatic = require 'jtstatic'
 config = require './config'
 
+
+###*
+ * getConfigs 获取配置文件
+ * @param  {[type]} apps          [description]
+ * @param  {[type]} launchAppList =             'all' [description]
+ * @param  {[type]} cbf           [description]
+ * @return {[type]}               [description]
+###
 getConfigs = (apps, launchAppList = 'all', cbf) ->
   fs = require 'fs'
   async.waterfall [
@@ -24,23 +33,28 @@ getConfigs = (apps, launchAppList = 'all', cbf) ->
       else
         _.each files, (file) ->
           if file.charAt(0) != '.'
-            file = "#{apps}/#{file}/config"
+            if apps
+              file = "#{apps}/#{file}/config"
+            else
+              file = "#{file}/config"
             configs.push require file
       cbf null, configs
-  ], (err, configs) ->
-    cbf err, configs
+  ], cbf
 
+# express的middleware处理
+middlewareHandler = (app, middleware) ->
+  if _.isFunction middleware
+    app.use middleware()
+  else if _.isArray middleware
+    _.each middleware, (mw) ->
+      middlewareHandler app, mw
+  else if _.isObject middleware
+    app.use middleware.mount, middleware.handler()
 
-initApp = (configs, setting, cbf) ->
-  jtLogger = require 'jtlogger'
-  jtStatic = require 'jtstatic'
-  express = require 'express'
-  app = express()
-  
+initApp = (config, app = express()) ->
 
-
-  # express的配置
-  expressSetting = setting.express || {}
+  # express的初始配置
+  expressSetting = config.express || {}
   if expressSetting.enable
     _.each expressSetting.enable, (key) ->
       app.enable key
@@ -50,43 +64,36 @@ initApp = (configs, setting, cbf) ->
   if expressSetting.set
     _.each expressSetting.set, (value, key) ->
       app.set key, value
-
-  # first 中间件，每个应用都可以在最开始的时候添加一个中间件
-  _.each configs, (cfg) ->
-    firstMiddleware = cfg.firstMiddleware
-    if _.isFunction firstMiddleware
-      app.use firstMiddleware()
-    else if _.isObject firstMiddleware
-      app.use firstMiddleware.mount, firstMiddleware.handler()
+  # app添加到最前的middleware，可直接使用返回function或者{mount : string, handler : function}这种形式）
+  firstMiddleware = config.firstMiddleware
+  if _.isFunction firstMiddleware
+    app.use firstMiddleware()
+  else if _.isObject firstMiddleware
+    app.use firstMiddleware.mount, firstMiddleware.handler()
 
 
   # 静态文件处理
-  jtStatic.configure setting.static
+  jtStatic = new JTStatic
+  if config.static?.convertExts
+    jtStatic.convertExts config.static.convertExts
+    delete config.static.convertExts
+  jtStatic.configure config.static
   jtStatic.emptyMergePath()
-  app.use setting.static.urlPrefix, jtStatic.static()
+  app.use config.static.urlPrefix, jtStatic.static()
+
 
   # favicon处理
-  if setting.favicon
-    app.use express.favicon setting.favicon
+  if config.favicon
+    app.use express.favicon config.favicon
 
-  # express的middleware处理，在静态文件和favicon之后
-  _.each configs, (cfg) ->
-    middlewareHandler = (middleware) ->
-      if _.isFunction middleware
-        app.use middleware()
-      else if _.isArray middleware
-        _.each middleware, (mw) ->
-          middlewareHandler mw
-      else if _.isObject middleware
-        app.use middleware.mount, middleware.handler()
-    middlewareHandler cfg.middleware
+
+  if config.middleware
+    middlewareHandler app, config.middleware
 
   # HTTP LOG and limit
   if config.isProductionMode
     app.use express.limit '1mb'
-    app.use jtLogger.getConnectLogger 'HTTP-INFO-LOGGER', {
-      format : express.logger.tiny
-    }
+    app.use express.logger 'tiny'
   else
     app.use express.logger 'dev'
 
@@ -99,26 +106,43 @@ initApp = (configs, setting, cbf) ->
 
   app.use require('./lib/errorhandler').handler()
 
-  app.listen setting.port
-
   # 获取session设置
-  _.each configs, (cfg) ->
-    sessionHandler = require './lib/sessionhandler'
-    if _.isFunction cfg.session
-      sessionHandler.handler cfg.session()
+  sessionHandler = require './lib/sessionhandler'
+  if _.isFunction config.session
+    sessionHandler.handler config.session()
 
   # route handle
   routeHandler = require './lib/routehandler'
-  _.each configs, (cfg) ->
-    if _.isFunction cfg.route
-      routeHandler.initRoutes app, cfg.route()
+  if _.isFunction config.route
+    routeHandler.initRoutes app, config.route(), jtStatic
 
+  if _.isFunction config.init
+    config.init app
 
-  # 调用初始化
+  app
+
+initApps = (configs, port, middleware, cbf) ->
+  app = express()
+
+  if _.isFunction middleware
+    cbf = middleware
+    middleware = null
+
+  if middleware
+    middlewareHandler app, middleware
   _.each configs, (cfg) ->
-    if _.isFunction cfg.init
-      cfg.init app
-  cbf null, app
+    if cfg.host
+      subApp = initApp cfg
+      if _.isArray cfg.host
+        _.each cfg.host, (host) ->
+          app.use express.vhost host, subApp
+      else
+        app.use express.vhost cfg.host, subApp
+    else
+      initApp cbf, app
+
+  app.listen port
+  console.info "server listen on port:#{port}"
 
 init = (setting, cbf) ->
   config.maxAge = setting.maxAge
@@ -126,7 +150,7 @@ init = (setting, cbf) ->
     (cbf) ->
       getConfigs setting.apps, setting.launch, cbf
     (configs, cbf) ->
-      initApp configs, setting, cbf
+      initApps configs, setting.port, setting.middleware, cbf
   ], cbf
 
 module.exports = 

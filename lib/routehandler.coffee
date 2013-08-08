@@ -4,7 +4,7 @@
 ###
 _ = require 'underscore'
 config = require '../config'
-FileImporter = require('jtstatic').FileImporter
+# FileImporter = require('jtstatic').FileImporter
 httpHandler = require './httphandler'
 
 routeHandler = 
@@ -14,39 +14,42 @@ routeHandler =
    * @param  {Array} routeInfos  路由配置的信息列表
    * @return {[type]}  [description]
   ###
-  initRoutes : (app, routeInfos) ->
+  initRoutes : (app, routeInfos, jtStatic) ->
     _.each routeInfos, (routeInfo) ->
       handle = (req, res, next) ->
         next = _.once next
-        debug = !config.isProductionMode
-        routeInfo.handler req, res, (err, viewData, statusCode = 200, headerOptions = {}) ->
+
+        cbf = (err, viewData, statusCode = 200, headerOptions = {}) ->
+          if err
+            next err
+            return
           if _.isNumber viewData
+            tmp = statusCode
             statusCode = viewData
-            viewData = null
+            viewData = tmp
           if _.isObject statusCode
             tmp = statusCode
             headerOptions = statusCode
             statusCode = tmp
           if !_.isNumber statusCode
             statusCode = 200
-          if err
-            next err
-          else if viewData
+          if viewData
             res.status statusCode
             if statusCode > 299 && statusCode < 400
               res.redirect statusCode, viewData
             else if routeInfo.template
-              viewData.fileImporter = new FileImporter routeInfo.staticsHost
+              viewData.fileImporter = jtStatic.getFileImporter routeInfo.staticsHost
               viewData.title ?= '未定义标题'
               httpHandler.render req, res, routeInfo.template, viewData, headerOptions, next
             else
               if _.isObject viewData
-                httpHandler.json req, res, viewData, headerOptions, statusCode
+                httpHandler.json req, res, viewData, headerOptions, next
               else
-                httpHandler.response req, res, viewData, headerOptions, statusCode
+                httpHandler.response req, res, viewData, headerOptions, next
           else
             res.status(statusCode).json {code : 0}
-        , next
+            
+        routeInfo.handler req, res, cbf, next
       middleware = routeInfo.middleware || []
       routes = routeInfo.route
       if !_.isArray routes

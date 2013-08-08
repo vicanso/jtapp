@@ -1,20 +1,31 @@
-jtRedis = require 'jtredis'
+redis = require 'redis'
+redisClient = redis.createClient()
 _ = require 'underscore'
-jtRedis.configure
-  query : true
-  redis : 
-    name : 'vicanso'
-    uri : 'redis://localhost:10010'
-    pwd : 'REDIS_PWD'
 sessionParser = null
 
+
 config = 
+  host : 'localhost'
+  express : 
+    enable : ["trust proxy"]
+    disabled : ["trust proxy"]
+    set : 
+      'view engine' : 'jade'
+      views : "#{__dirname}/views"
+  static : 
+    path : "#{__dirname}/statics"
+    mergePath : "#{__dirname}/statics/temp"
+    mergeUrlPrefix : '/temp'
+    maxAge : 3000
+    mergeList : []
+    urlPrefix : '/static'
   firstMiddleware : 
-    mount : 'demo'
+    mount : '/app1'
     handler : ->
       (req, res, next) ->
-        console.dir 'demo firstMiddleware'
+        console.dir 'app1 firstMiddleware'
         next()
+  isProductionMode : process.env.NODE_ENV == 'production'
   route : ->
     routeInfos = [
       {
@@ -23,7 +34,7 @@ config =
         # route路径，可以为Array、String
         route : ['/']
         # 模板路径
-        template : 'demo/index'
+        template : 'index'
         # 中间件
         middleware : [sessionParser]
         # route处理函数
@@ -31,7 +42,14 @@ config =
           # 定义中有模板路径的，自动根据模板返回HTML
           cbf null, {
             title : '销售单'
+          }, {
+            'v-ttl' : '10s'
           }
+      }
+      {
+        route : '/healthchecks'
+        handler : (req, res) ->
+          res.end 'aaaa'
       }
       {
         route : '/data'
@@ -56,7 +74,7 @@ config =
     key : 'vicanso'
     secret : 'jenny&tree'
     ttl : 30 * 60
-    client : jtRedis.getClient 'vicanso'
+    client : redisClient
     complete : (parser) ->
       sessionParser = parser
 

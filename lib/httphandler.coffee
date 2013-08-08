@@ -17,22 +17,20 @@ httpHandler =
    * @return {[type]}      [description]
   ###
   render : (req, res, view, data, headerOptions = {}, next) ->
-    if data
-      fileImporter = data.fileImporter
-      res.render view, data, (err, html) =>
-        if err
-          next err
-          return 
-        if fileImporter
-          html = appendJsAndCss html, fileImporter
-        maxAge = config.maxAge || 300 * 1000
+    fileImporter = data.fileImporter
+    res.render view, data, (err, html) =>
+      if err
+        next err
+        return 
+      if fileImporter
+        html = appendJsAndCss html, fileImporter
+      maxAge = config.maxAge || 300
 
-        _.defaults headerOptions, {
-          'Content-Type' :'text/html'
-          'Cache-Control' : "public, max-age=#{maxAge / 1000}"
-          'Last-Modified' : new Date()
-        }
-        @response req, res, html, headerOptions
+      _.defaults headerOptions, {
+        'Content-Type' :'text/html'
+        'Cache-Control' : "public, max-age=#{maxAge}"
+      }
+      @response req, res, html, headerOptions, next
     @
   ###*
    * response 响应请求
@@ -42,19 +40,34 @@ httpHandler =
    * @param  {Object} headerOptions 响应的头部
    * @return {[type]}               [description]
   ###
-  response : (req, res, data, headerOptions) ->
+  response : (req, res, data, headerOptions, next) ->
     if resIsAvailable res
+      maxAge = config.maxAge || 300
+      _.defaults headerOptions, {
+        'Content-Type' :'text/plain'
+        'Cache-Control' : "public, max-age=#{maxAge}"
+      }
+
       if headerOptions
         _.each headerOptions, (value, key) ->
           res.header key ,value
       res.send data
+    else
+      next new Error 'the header has been sent!'
     @
-  json : (req, res, data, headerOptions) ->
+  json : (req, res, data, headerOptions, next) ->
     if resIsAvailable res
+      maxAge = config.maxAge || 300
+      _.defaults headerOptions, {
+        'Content-Type' :'application/json'
+        'Cache-Control' : "public, max-age=#{maxAge}"
+      }
       if headerOptions
         _.each headerOptions, (value, key) ->
           res.header key ,value
       res.json 200, data
+    else
+      next new Error 'the header has been sent!'
     @
 
 ###*

@@ -13,23 +13,32 @@ errorHandler =
   ###
   handler : () ->
     (err, req, res, next) ->
-      accept = req.headers.accept || ''
-      if ~accept.indexOf 'json'
-        errorJson err, res
+      if !config.isProductionMode
+        expressErrorHandler err, req, res, next
       else
-        if config.isProductionMode
-          errorPage err, res
+        accept = req.headers.accept || ''
+        if ~accept.indexOf 'json'
+          errorJson err, res
         else
-          expressErrorHandler err, req, res, next
+          errorPage err, res
 
 errorPage = (err, res) ->
-  res.send err.status || 500, err.message
+  if resIsAvailable res
+    res.send err.status || 500, err.message
 errorJson = (err, res) ->
   data = 
     code : err.code
     msg : err.msg || err.message
   if !config.isProductionMode
     data.stack = err.stack
-  res.json err.status || 500, data
+  if resIsAvailable res
+    res.json err.status || 500, data
+###*
+   * resIsAvailable 判断response是否可用
+   * @param  {response} res response对象
+   * @return {Boolean}
+  ###
+resIsAvailable = (res) ->
+  !res.headerSent
 
 module.exports = errorHandler
