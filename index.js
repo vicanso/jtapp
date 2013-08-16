@@ -18,6 +18,15 @@
 
   config = require('./config');
 
+  /**
+   * getConfigs 获取配置文件
+   * @param  {[type]} apps          [description]
+   * @param  {[type]} launchAppList =             'all' [description]
+   * @param  {[type]} cbf           [description]
+   * @return {[type]}               [description]
+  */
+
+
   getConfigs = function(apps, launchAppList, cbf) {
     var fs;
     if (launchAppList == null) {
@@ -52,9 +61,7 @@
         }
         return cbf(null, configs);
       }
-    ], function(err, configs) {
-      return cbf(err, configs);
-    });
+    ], cbf);
   };
 
   middlewareHandler = function(app, middleware) {
@@ -162,7 +169,8 @@
       }
     });
     app.listen(port);
-    return console.info("server listen on port:" + port);
+    console.info("server listen on port:" + port);
+    return cbf(null, app);
   };
 
   init = function(setting, cbf) {

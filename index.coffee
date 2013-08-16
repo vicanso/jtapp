@@ -52,7 +52,6 @@ middlewareHandler = (app, middleware) ->
     app.use middleware.mount, middleware.handler()
 
 initApp = (config, app = express()) ->
-
   # express的初始配置
   expressSetting = config.express || {}
   if expressSetting.enable
@@ -143,6 +142,7 @@ initApps = (configs, port, middleware, cbf) ->
 
   app.listen port
   console.info "server listen on port:#{port}"
+  cbf null, app
 
 init = (setting, cbf) ->
   config.maxAge = setting.maxAge
