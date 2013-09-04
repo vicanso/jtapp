@@ -77,7 +77,7 @@ initApp = (config, app = express()) ->
     jtStatic.convertExts config.static.convertExts
     delete config.static.convertExts
   jtStatic.configure config.static
-  jtStatic.emptyMergePath()
+  # jtStatic.emptyMergePath()
   app.use config.static.urlPrefix, jtStatic.static()
 
 

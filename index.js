@@ -1,4 +1,3 @@
-
 /**!
 * Copyright(c) 2012 vicanso 墨鱼仔
 * MIT Licensed
@@ -109,7 +108,6 @@
       delete config["static"].convertExts;
     }
     jtStatic.configure(config["static"]);
-    jtStatic.emptyMergePath();
     app.use(config["static"].urlPrefix, jtStatic["static"]());
     if (config.favicon) {
       app.use(express.favicon(config.favicon));
