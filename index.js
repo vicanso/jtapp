@@ -108,7 +108,24 @@
       delete config["static"].convertExts;
     }
     jtStatic.configure(config["static"]);
-    app.use(config["static"].urlPrefix, jtStatic["static"]());
+    if (config["static"].path) {
+      if (_.isArray(config["static"].path)) {
+        _.each(config["static"].path, function(tmpPath) {
+          return app.use(config["static"].urlPrefix, jtStatic["static"]({
+            path: tmpPath
+          }));
+        });
+      } else {
+        app.use(config["static"].urlPrefix, jtStatic["static"]());
+      }
+    }
+    if (config["static"].otherPaths) {
+      _.each(config["static"].otherPaths, function(pathOption) {
+        return app.use(pathOption.urlPrefix, jtStatic["static"]({
+          path: pathOption.path
+        }));
+      });
+    }
     if (config.favicon) {
       app.use(express.favicon(config.favicon));
     }

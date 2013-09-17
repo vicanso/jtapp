@@ -77,8 +77,15 @@ initApp = (config, app = express()) ->
     jtStatic.convertExts config.static.convertExts
     delete config.static.convertExts
   jtStatic.configure config.static
-  # jtStatic.emptyMergePath()
-  app.use config.static.urlPrefix, jtStatic.static()
+  if config.static.path
+    if _.isArray config.static.path
+      _.each config.static.path, (tmpPath) ->
+        app.use config.static.urlPrefix, jtStatic.static {path : tmpPath}
+    else
+      app.use config.static.urlPrefix, jtStatic.static()
+  if config.static.otherPaths
+    _.each config.static.otherPaths, (pathOption) ->
+      app.use pathOption.urlPrefix, jtStatic.static {path : pathOption.path}
 
 
   # favicon处理
