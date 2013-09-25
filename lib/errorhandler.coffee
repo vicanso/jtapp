@@ -28,7 +28,8 @@ errorPage = (err, res) ->
 errorJson = (err, res) ->
   data = 
     code : err.code
-    msg : err.msg || err.message
+    err : err.msg || err.message
+    msg : err._msg
   if !config.isProductionMode
     data.stack = err.stack
   if resIsAvailable res
