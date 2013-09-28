@@ -24,11 +24,10 @@ httpHandler =
         return 
       if fileImporter
         html = appendJsAndCss html, fileImporter
-      maxAge = config.maxAge || 300
+      # maxAge = config.maxAge || 300
 
       _.defaults headerOptions, {
         'Content-Type' :'text/html'
-        'Cache-Control' : "public, max-age=#{maxAge}"
       }
       @response req, res, html, headerOptions, next
     @
@@ -45,8 +44,10 @@ httpHandler =
       maxAge = config.maxAge || 300
       _.defaults headerOptions, {
         'Content-Type' :'text/plain'
-        'Cache-Control' : "public, max-age=#{maxAge}"
       }
+
+      if req.method == 'GET'
+        headerOptions['Cache-Control'] ?= "public, max-age=#{maxAge}"
 
       if headerOptions
         _.each headerOptions, (value, key) ->
@@ -60,8 +61,9 @@ httpHandler =
       maxAge = config.maxAge || 300
       _.defaults headerOptions, {
         'Content-Type' :'application/json'
-        'Cache-Control' : "public, max-age=#{maxAge}"
       }
+      if req.method == 'GET'
+        headerOptions['Cache-Control'] ?= "public, max-age=#{maxAge}"
       if headerOptions
         _.each headerOptions, (value, key) ->
           res.header key ,value
