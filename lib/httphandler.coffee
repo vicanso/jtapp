@@ -41,12 +41,12 @@ httpHandler =
   ###
   response : (req, res, data, headerOptions, next) ->
     if resIsAvailable res
-      maxAge = config.maxAge || 300
+      maxAge = config.maxAge
       _.defaults headerOptions, {
         'Content-Type' :'text/plain'
       }
 
-      if req.method == 'GET'
+      if req.method == 'GET' && maxAge?
         headerOptions['Cache-Control'] ?= "public, max-age=#{maxAge}"
 
       if headerOptions
@@ -58,11 +58,11 @@ httpHandler =
     @
   json : (req, res, data, headerOptions, next) ->
     if resIsAvailable res
-      maxAge = config.maxAge || 300
+      maxAge = config.maxAge
       _.defaults headerOptions, {
         'Content-Type' :'application/json'
       }
-      if req.method == 'GET'
+      if req.method == 'GET' && maxAge
         headerOptions['Cache-Control'] ?= "public, max-age=#{maxAge}"
       if headerOptions
         _.each headerOptions, (value, key) ->
