@@ -7,7 +7,7 @@ _ = require 'underscore'
 express = require 'express'
 JTStatic = require 'jtstatic'
 config = require './config'
-
+noop = ->
 
 ###*
  * getConfigs 获取配置文件
@@ -99,7 +99,6 @@ initApp = (config, app = express()) ->
   # HTTP LOG and limit
   if config.isProductionMode
     app.use express.limit '1mb'
-    app.use express.logger 'tiny'
   else
     app.use express.logger 'dev'
 
@@ -148,10 +147,10 @@ initApps = (configs, port, middleware, cbf) ->
       initApp cbf, app
 
   app.listen port
-  console.info "server listen on port:#{port}"
+  # console.info "server listen on port:#{port}"
   cbf null, app
 
-init = (setting, cbf) ->
+init = (setting, cbf = noop) ->
   config.maxAge = setting.maxAge
   async.waterfall [
     (cbf) ->

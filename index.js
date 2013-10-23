@@ -5,7 +5,7 @@
 
 
 (function() {
-  var JTStatic, async, config, express, getConfigs, init, initApp, initApps, middlewareHandler, _;
+  var JTStatic, async, config, express, getConfigs, init, initApp, initApps, middlewareHandler, noop, _;
 
   async = require('async');
 
@@ -16,6 +16,8 @@
   JTStatic = require('jtstatic');
 
   config = require('./config');
+
+  noop = function() {};
 
   /**
    * getConfigs 获取配置文件
@@ -134,7 +136,6 @@
     }
     if (config.isProductionMode) {
       app.use(express.limit('1mb'));
-      app.use(express.logger('tiny'));
     } else {
       app.use(express.logger('dev'));
     }
@@ -184,11 +185,13 @@
       }
     });
     app.listen(port);
-    console.info("server listen on port:" + port);
     return cbf(null, app);
   };
 
   init = function(setting, cbf) {
+    if (cbf == null) {
+      cbf = noop;
+    }
     config.maxAge = setting.maxAge;
     return async.waterfall([
       function(cbf) {
