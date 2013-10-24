@@ -99,10 +99,8 @@
       });
     }
     firstMiddleware = config.firstMiddleware;
-    if (_.isFunction(firstMiddleware)) {
-      app.use(firstMiddleware());
-    } else if (_.isObject(firstMiddleware)) {
-      app.use(firstMiddleware.mount, firstMiddleware.handler());
+    if (firstMiddleware) {
+      middlewareHandler(app, firstMiddleware);
     }
     jtStatic = new JTStatic;
     if ((_ref = config["static"]) != null ? _ref.convertExts : void 0) {

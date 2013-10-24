@@ -65,10 +65,11 @@ initApp = (config, app = express()) ->
       app.set key, value
   # app添加到最前的middleware，可直接使用返回function或者{mount : string, handler : function}这种形式）
   firstMiddleware = config.firstMiddleware
-  if _.isFunction firstMiddleware
-    app.use firstMiddleware()
-  else if _.isObject firstMiddleware
-    app.use firstMiddleware.mount, firstMiddleware.handler()
+  middlewareHandler app, firstMiddleware if firstMiddleware
+  # if _.isFunction firstMiddleware
+  #   app.use firstMiddleware()
+  # else if _.isObject firstMiddleware
+  #   app.use firstMiddleware.mount, firstMiddleware.handler()
 
 
   # 静态文件处理
