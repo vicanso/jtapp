@@ -5,7 +5,7 @@
 
 
 (function() {
-  var JTStatic, async, config, express, getConfigs, init, initApp, initApps, middlewareHandler, noop, _;
+  var JTStatic, async, express, getConfigs, init, initApp, initApps, isProductionMode, middlewareHandler, noop, _;
 
   async = require('async');
 
@@ -15,7 +15,7 @@
 
   JTStatic = require('jtstatic');
 
-  config = require('./config');
+  isProductionMode = process.env.NODE_ENV === 'production';
 
   noop = function() {};
 
@@ -132,7 +132,7 @@
     if (config.middleware) {
       middlewareHandler(app, config.middleware);
     }
-    if (config.isProductionMode) {
+    if (isProductionMode) {
       app.use(express.limit('1mb'));
     } else {
       app.use(express.logger('dev'));
@@ -179,7 +179,7 @@
           return app.use(express.vhost(cfg.host, subApp));
         }
       } else {
-        return initApp(cbf, app);
+        return initApp(cfg, app);
       }
     });
     app.listen(port);
@@ -187,9 +187,11 @@
   };
 
   init = function(setting, cbf) {
+    var config;
     if (cbf == null) {
       cbf = noop;
     }
+    config = require('./config');
     config.maxAge = setting.maxAge;
     return async.waterfall([
       function(cbf) {

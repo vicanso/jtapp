@@ -6,7 +6,7 @@ async = require 'async'
 _ = require 'underscore'
 express = require 'express'
 JTStatic = require 'jtstatic'
-config = require './config'
+isProductionMode = process.env.NODE_ENV == 'production'
 noop = ->
 
 ###*
@@ -98,7 +98,7 @@ initApp = (config, app = express()) ->
     middlewareHandler app, config.middleware
 
   # HTTP LOG and limit
-  if config.isProductionMode
+  if isProductionMode
     app.use express.limit '1mb'
   else
     app.use express.logger 'dev'
@@ -145,13 +145,14 @@ initApps = (configs, port, middleware, cbf) ->
       else
         app.use express.vhost cfg.host, subApp
     else
-      initApp cbf, app
+      initApp cfg, app
 
   app.listen port
   # console.info "server listen on port:#{port}"
   cbf null, app
 
 init = (setting, cbf = noop) ->
+  config = require './config'
   config.maxAge = setting.maxAge
   async.waterfall [
     (cbf) ->
