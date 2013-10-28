@@ -17,7 +17,7 @@ errorHandler =
         expressErrorHandler err, req, res, next
       else
         accept = req.headers.accept || ''
-        if ~accept.indexOf 'json'
+        if ~accept.indexOf 'json' 
           errorJson err, res
         else
           errorPage err, res
@@ -28,8 +28,8 @@ errorPage = (err, res) ->
 errorJson = (err, res) ->
   data = 
     code : err.code
-    err : err.msg || err.message
-    msg : err._msg
+    err : err.message
+    msg : err.msg
   if !config.isProductionMode
     data.stack = err.stack
   if resIsAvailable res
