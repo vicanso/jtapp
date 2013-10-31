@@ -24,7 +24,8 @@ errorHandler =
 
 errorPage = (err, res) ->
   if resIsAvailable res
-    res.send err.status || 500, err.message
+    statusCode = err.status || err.code || 500
+    res.send statusCode, err.message
 errorJson = (err, res) ->
   data = 
     code : err.code
@@ -33,7 +34,8 @@ errorJson = (err, res) ->
   if !config.isProductionMode
     data.stack = err.stack
   if resIsAvailable res
-    res.json err.status || 500, data
+    statusCode = err.status || err.code || 500
+    res.json statusCode, data
 ###*
    * resIsAvailable 判断response是否可用
    * @param  {response} res response对象

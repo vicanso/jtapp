@@ -39,7 +39,6 @@ routeHandler =
               res.redirect statusCode, viewData
             else if routeInfo.template
               viewData.fileImporter = jtStatic.getFileImporter routeInfo.staticsHost
-              viewData.title ?= '未定义标题'
               httpHandler.render req, res, routeInfo.template, viewData, headerOptions, next
             else
               if _.isObject viewData

@@ -132,9 +132,7 @@
     if (config.middleware) {
       middlewareHandler(app, config.middleware);
     }
-    if (isProductionMode) {
-      app.use(express.limit('1mb'));
-    } else {
+    if (!isProductionMode) {
       app.use(express.logger('dev'));
     }
     app.use(express.bodyParser({

@@ -97,10 +97,8 @@ initApp = (config, app = express()) ->
   if config.middleware
     middlewareHandler app, config.middleware
 
-  # HTTP LOG and limit
-  if isProductionMode
-    app.use express.limit '1mb'
-  else
+  # HTTP LOG
+  if !isProductionMode
     app.use express.logger 'dev'
 
   app.use express.bodyParser {
