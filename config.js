@@ -1,4 +1,3 @@
-
 /**!
 * Copyright(c) 2012 vicanso 墨鱼仔
 * MIT Licensed
@@ -34,6 +33,8 @@
     }
   };
 
-  module.exports = config;
+  module.exports.isProductionMode = config.isProductionMode;
+
+  module.exports.getUID = config.getUID;
 
 }).call(this);

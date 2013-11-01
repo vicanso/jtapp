@@ -61,4 +61,4 @@ routeHandler =
           method = type.toLowerCase()
           app[method] route, middleware, handle
     @
-module.exports = routeHandler
+module.exports.initRoutes = routeHandler.initRoutes

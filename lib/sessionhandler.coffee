@@ -23,4 +23,4 @@ sessionHandler =
         sessionParser req, res, cbf
     @
 
-module.exports = sessionHandler
+module.exports.handler = sessionHandler.handler

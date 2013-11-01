@@ -56,6 +56,15 @@ httpHandler =
     else
       next new Error 'the header has been sent!'
     @
+  ###*
+   * json 响应json
+   * @param  {[type]}   req           [description]
+   * @param  {[type]}   res           [description]
+   * @param  {[type]}   data          [description]
+   * @param  {[type]}   headerOptions [description]
+   * @param  {Function} next          [description]
+   * @return {[type]}                 [description]
+  ###
   json : (req, res, data, headerOptions, next) ->
     if resIsAvailable res
       maxAge = config.maxAge
@@ -90,4 +99,6 @@ resIsAvailable = (res) ->
   !res.headerSent
 
 
-module.exports = httpHandler
+module.exports.render = httpHandler.render
+module.exports.response = httpHandler.response
+module.exports.json = httpHandler.json

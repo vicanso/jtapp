@@ -6,12 +6,13 @@
 express = require 'express'
 config = require '../config'
 expressErrorHandler = express.errorHandler()
-errorHandler = 
-  ###*
-   * handler 返回错误信息处理函数
-   * @return {Function} express middleware
-  ###
-  handler : () ->
+
+
+###*
+ * handler 返回错误信息处理函数
+ * @return {Function} express middleware
+###
+handler = () ->
     (err, req, res, next) ->
       if !config.isProductionMode
         expressErrorHandler err, req, res, next
@@ -44,4 +45,6 @@ errorJson = (err, res) ->
 resIsAvailable = (res) ->
   !res.headerSent
 
-module.exports = errorHandler
+
+
+module.exports.handler = handler

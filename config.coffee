@@ -22,4 +22,5 @@ config =
     else
       cluster.worker.id || -1
       
-module.exports = config
+module.exports.isProductionMode = config.isProductionMode
+module.exports.getUID = config.getUID
