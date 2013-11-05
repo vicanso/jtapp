@@ -19,32 +19,33 @@ routeHandler =
       handle = (req, res, next) ->
         next = _.once next
 
-        cbf = (err, viewData, statusCode = 200, headerOptions = {}) ->
+        cbf = (err, renderData, statusCode = 200, headerOptions = {}) ->
           if err
             next err
             return
-          if _.isNumber viewData
+          if _.isNumber renderData
             tmp = statusCode
-            statusCode = viewData
-            viewData = tmp
+            statusCode = renderData
+            renderData = tmp
           if _.isObject statusCode
             tmp = statusCode
             headerOptions = statusCode
             statusCode = tmp
           if !_.isNumber statusCode
             statusCode = 200
-          if viewData
+          if renderData
+            template = renderData.template || routeInfo.template
             res.status statusCode
             if statusCode > 299 && statusCode < 400
-              res.redirect statusCode, viewData
-            else if routeInfo.template
-              viewData.fileImporter = jtStatic.getFileImporter routeInfo.staticsHost
-              httpHandler.render req, res, routeInfo.template, viewData, headerOptions, next
+              res.redirect statusCode, renderData
+            else if template
+              renderData.fileImporter = jtStatic.getFileImporter routeInfo.staticsHost
+              httpHandler.render req, res, template, renderData, headerOptions, next
             else
-              if _.isObject viewData
-                httpHandler.json req, res, viewData, headerOptions, next
+              if _.isObject renderData
+                httpHandler.json req, res, renderData, headerOptions, next
               else
-                httpHandler.response req, res, viewData, headerOptions, next
+                httpHandler.response req, res, renderData, headerOptions, next
           else
             res.status(statusCode).json {code : 0}
             

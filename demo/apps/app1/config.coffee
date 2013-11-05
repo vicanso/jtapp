@@ -4,6 +4,37 @@ _ = require 'underscore'
 sessionParser = null
 
 
+getStaticConfig = ->
+  {
+    path : "#{__dirname}/statics"
+    mergePath : "#{__dirname}/statics/temp"
+    mergeUrlPrefix : '/temp'
+    maxAge : 3000
+    mergeList : []
+    urlPrefix : '/static'
+  }
+
+httpResponseTimeLogger = ->
+  (req, res, next) ->
+      return next() if res.jt_responseTime
+      start = new Date
+      res.jt_responseTime = true
+      logRequest = _.once ->
+        if start
+          duration = new Date - start
+          start = 0
+          result = 
+            type : 'http'
+            method : req.method
+            params : req.url
+            statusCode : res.statusCode || 200
+            date : new Date
+            length : res._headers['content-length']
+            elapsedTime : duration
+      res.on 'finish', logRequest
+      res.on 'close', logRequest
+      next()
+
 config = 
   host : 'localhost'
   express : 
@@ -12,20 +43,16 @@ config =
     set : 
       'view engine' : 'jade'
       views : "#{__dirname}/views"
-  static : 
-    path : "#{__dirname}/statics"
-    mergePath : "#{__dirname}/statics/temp"
-    mergeUrlPrefix : '/temp'
-    maxAge : 3000
-    mergeList : []
-    urlPrefix : '/static'
+  static : getStaticConfig()
+
   firstMiddleware : 
     mount : '/app1'
     handler : ->
       (req, res, next) ->
         console.dir 'app1 firstMiddleware'
         next()
-  isProductionMode : process.env.NODE_ENV == 'production'
+  init : (app) ->
+    console.dir app
   route : ->
     routeInfos = [
       {

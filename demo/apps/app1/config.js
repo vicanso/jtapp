@@ -1,5 +1,5 @@
 (function() {
-  var config, redis, redisClient, sessionParser, _;
+  var config, getStaticConfig, httpResponseTimeLogger, redis, redisClient, sessionParser, _;
 
   redis = require('redis');
 
@@ -8,6 +8,47 @@
   _ = require('underscore');
 
   sessionParser = null;
+
+  getStaticConfig = function() {
+    return {
+      path: "" + __dirname + "/statics",
+      mergePath: "" + __dirname + "/statics/temp",
+      mergeUrlPrefix: '/temp',
+      maxAge: 3000,
+      mergeList: [],
+      urlPrefix: '/static'
+    };
+  };
+
+  httpResponseTimeLogger = function() {
+    return function(req, res, next) {
+      var logRequest, start;
+      if (res.jt_responseTime) {
+        return next();
+      }
+      start = new Date;
+      res.jt_responseTime = true;
+      logRequest = _.once(function() {
+        var duration, result;
+        if (start) {
+          duration = new Date - start;
+          start = 0;
+          return result = {
+            type: 'http',
+            method: req.method,
+            params: req.url,
+            statusCode: res.statusCode || 200,
+            date: new Date,
+            length: res._headers['content-length'],
+            elapsedTime: duration
+          };
+        }
+      });
+      res.on('finish', logRequest);
+      res.on('close', logRequest);
+      return next();
+    };
+  };
 
   config = {
     host: 'localhost',
@@ -19,14 +60,7 @@
         views: "" + __dirname + "/views"
       }
     },
-    "static": {
-      path: "" + __dirname + "/statics",
-      mergePath: "" + __dirname + "/statics/temp",
-      mergeUrlPrefix: '/temp',
-      maxAge: 3000,
-      mergeList: [],
-      urlPrefix: '/static'
-    },
+    "static": getStaticConfig(),
     firstMiddleware: {
       mount: '/app1',
       handler: function() {
@@ -36,7 +70,9 @@
         };
       }
     },
-    isProductionMode: process.env.NODE_ENV === 'production',
+    init: function(app) {
+      return console.dir(app);
+    },
     route: function() {
       var routeInfos;
       return routeInfos = [
