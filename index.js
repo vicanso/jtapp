@@ -200,8 +200,6 @@
     ], cbf);
   };
 
-  module.exports = {
-    init: init
-  };
+  module.exports.init = init;
 
 }).call(this);

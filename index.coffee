@@ -66,10 +66,6 @@ initApp = (config, app = express()) ->
   # app添加到最前的middleware，可直接使用返回function或者{mount : string, handler : function}这种形式）
   firstMiddleware = config.firstMiddleware
   middlewareHandler app, firstMiddleware if firstMiddleware
-  # if _.isFunction firstMiddleware
-  #   app.use firstMiddleware()
-  # else if _.isObject firstMiddleware
-  #   app.use firstMiddleware.mount, firstMiddleware.handler()
 
 
   # 静态文件处理
@@ -159,5 +155,4 @@ init = (setting, cbf = noop) ->
       initApps configs, setting.port, setting.middleware, cbf
   ], cbf
 
-module.exports = 
-  init : init
+module.exports.init = init

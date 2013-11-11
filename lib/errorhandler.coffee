@@ -12,16 +12,16 @@ expressErrorHandler = express.errorHandler()
  * handler 返回错误信息处理函数
  * @return {Function} express middleware
 ###
-handler = () ->
-    (err, req, res, next) ->
-      if !config.isProductionMode
-        expressErrorHandler err, req, res, next
+handler = ->
+  (err, req, res, next) ->
+    if !config.isProductionMode
+      expressErrorHandler err, req, res, next
+    else
+      accept = req.headers.accept || ''
+      if ~accept.indexOf 'json' 
+        errorJson err, res
       else
-        accept = req.headers.accept || ''
-        if ~accept.indexOf 'json' 
-          errorJson err, res
-        else
-          errorPage err, res
+        errorPage err, res
 
 errorPage = (err, res) ->
   if resIsAvailable res
